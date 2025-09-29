@@ -350,6 +350,7 @@
     let database;
     let filesRef;
     let isFirebaseConnected = false;
+    let loadTimeout;
 
     try {
       firebase.initializeApp(firebaseConfig);
@@ -357,6 +358,16 @@
       filesRef = database.ref('files');
       isFirebaseConnected = true;
       console.log('Firebase 연결 성공');
+      
+      // 연결 상태 모니터링
+      const connectedRef = database.ref('.info/connected');
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          console.log('Firebase 실시간 연결됨');
+        } else {
+          console.log('Firebase 연결 끊김');
+        }
+      });
     } catch (error) {
       console.error('Firebase 초기화 실패:', error);
       document.getElementById('fileListContainer').innerHTML = 
@@ -411,9 +422,9 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      // 파일 크기 체크 (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showStatus('파일 크기는 5MB 이하여야 합니다.', 'error');
+      // 파일 크기 체크 (20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        showStatus('파일 크기는 20MB 이하여야 합니다.', 'error');
         return;
       }
 
@@ -495,7 +506,14 @@
 
     // Firebase에서 파일 로드
     function loadFiles() {
-      filesRef.on('value', (snapshot) => {
+      // 타임아웃 설정 (5초)
+      loadTimeout = setTimeout(() => {
+        document.getElementById('fileListContainer').innerHTML = 
+          '<div class="empty-state"><p>Firebase 연결 시간 초과<br>인터넷 연결을 확인하거나 페이지를 새로고침하세요.</p></div>';
+      }, 5000);
+
+      filesRef.once('value', (snapshot) => {
+        clearTimeout(loadTimeout);
         allFiles = [];
         snapshot.forEach((childSnapshot) => {
           const file = childSnapshot.val();
@@ -503,10 +521,22 @@
           allFiles.push(file);
         });
         renderFiles();
+        
+        // 초기 로드 후 실시간 동기화 시작
+        filesRef.on('value', (snapshot) => {
+          allFiles = [];
+          snapshot.forEach((childSnapshot) => {
+            const file = childSnapshot.val();
+            file.id = childSnapshot.key;
+            allFiles.push(file);
+          });
+          renderFiles();
+        });
       }, (error) => {
+        clearTimeout(loadTimeout);
         console.error('파일 로드 실패:', error);
         document.getElementById('fileListContainer').innerHTML = 
-          '<div class="empty-state"><p>파일을 불러올 수 없습니다.</p></div>';
+          '<div class="empty-state"><p>파일을 불러올 수 없습니다.<br>Firebase 설정을 확인하세요.</p></div>';
       });
     }
 
