@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탑승구 안내방송 APP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      width: 40px;
+    }
+
+    .header-center {
+      flex: 1;
+      text-align: center;
+    }
+
+    .header-center h1 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .header-right {
+      width: 40px;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.1);
+    }
+
+    .icon-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .upload-section {
+      display: none;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 2px dashed #667eea;
+    }
+
+    .upload-section.active {
+      display: block;
+    }
+
+    .upload-area {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .upload-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .upload-btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .file-table thead {
+      background: #f8f9fa;
+    }
+
+    .file-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .file-table td {
+      padding: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .file-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 8px 15px;
+      margin: 0 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .play-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .pause-btn {
+      background: #ffc107;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+
+    .action-btn:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .favorite-icon {
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.3s;
+    }
+
+    .favorite-icon:hover {
+      transform: scale(1.2);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #6c757d;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      fill: #dee2e6;
+      margin-bottom: 20px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filter-btn {
+      padding: 10px 20px;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .status-message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <button class="icon-btn" id="favoriteFilterBtn" title="즐겨찾기 보기">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="header-center">
+        <h1>탑승구 안내방송 APP</h1>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="uploadToggleBtn" title="파일 등록">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="upload-section" id="uploadSection">
+        <div class="upload-area">
+          <h3 style="margin-bottom: 15px;">음성 파일 업로드</h3>
+          <p style="color: #6c757d; margin-bottom: 20px;">MP3, MP4 파일을 선택해주세요</p>
+          <input type="file" id="fileInput" accept=".mp3,.mp4,audio/*,video/mp4">
+          <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            파일 선택
+          </button>
+          <div id="uploadStatus"></div>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="favorite">즐겨찾기</button>
+      </div>
+
+      <div id="fileListContainer">
+        <div class="loading">파일 목록을 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" style="display: none;"></audio>
+
+  <script>
+    // 로컬 스토리지 키
+    const STORAGE_KEY = 'boarding_announcement_files';
+    
+    let allFiles = [];
+    let currentFilter = 'all';
+    let currentPlayingId = null;
+
+    // 초기 로드
+    window.onload = function() {
+      loadFiles();
+    };
+
+    // 업로드 토글
+    document.getElementById('uploadToggleBtn').addEventListener('click', function() {
+      document.getElementById('uploadSection').classList.toggle('active');
+    });
+
+    // 즐겨찾기 필터 버튼
+    document.getElementById('favoriteFilterBtn').addEventListener('click', function() {
+      currentFilter = currentFilter === 'all' ? 'favorite' : 'all';
+      updateFilterButtons();
+      renderFiles();
+    });
+
+    // 필터 탭
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        currentFilter = this.dataset.filter;
+        updateFilterButtons();
+        renderFiles();
+      });
+    });
+
+    function updateFilterButtons() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+      });
+    }
+
+    // 파일 업로드
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('uploadStatus');
+      statusEl.className = 'status-message status-info';
+      statusEl.textContent = '업로드 중...';
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const fileData = {
+            id: Date.now().toString(),
+            fileName: file.name,
+            fileData: event.target.result,
+            favorite: false,
+            uploadDate: new Date().toISOString()
+          };
+
+          // 로컬 스토리지에 저장
+          allFiles.push(fileData);
+          saveFiles();
+
+          statusEl.className = 'status-message status-success';
+          statusEl.textContent = '✓ 업로드 완료!';
+          
+          renderFiles();
+          
+          setTimeout(() => {
+            statusEl.textContent = '';
+            statusEl.className = '';
+            document.getElementById('uploadSection').classList.remove('active');
+            e.target.value = ''; // 파일 입력 초기화
+          }, 2000);
+        } catch (error) {
+          statusEl.className = 'status-message status-error';
+          statusEl.textContent = '업로드 실패: ' + error.message;
+        }
+      };
+
+      reader.onerror = function() {
+        statusEl.className = 'status-message status-error';
+        statusEl.textContent = '파일을 읽을 수 없습니다.';
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    // 파일 저장
+    function saveFiles() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allFiles));
+      } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+          alert('저장 공간이 부족합니다. 일부 파일을 삭제해주세요.');
+        }
+      }
+    }
+
+    // 파일 로드
+    function loadFiles() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        allFiles = stored ? JSON.parse(stored) : [];
+        renderFiles();
+      } catch (e) {
+        console.error('파일 로드 실패:', e);
+        allFiles = [];
+        renderFiles();
+      }
+    }
+
+    // 파일 목록 렌더링
+    function renderFiles() {
+      const container = document.getElementById('fileListContainer');
+      
+      let displayFiles = allFiles;
+      if (currentFilter === 'favorite') {
+        displayFiles = allFiles.filter(f => f.favorite);
+      }
+
+      if (displayFiles.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            <p>${currentFilter === 'favorite' ? '즐겨찾기한 파일이 없습니다.' : '등록된 파일이 없습니다.'}<br>+ 버튼을 눌러 파일을 추가해주세요.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <table class="file-table">
+          <thead>
+            <tr>
+              <th width="40"></th>
+              <th>파일명</th>
+              <th width="200" style="text-align: center;">Start/Pause</th>
+              <th width="100" style="text-align: center;">Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      displayFiles.forEach(file => {
+        html += `
+          <tr>
+            <td>
+              <span class="favorite-icon" onclick="toggleFavorite('${file.id}')" style="color: ${file.favorite ? '#ffc107' : '#dee2e6'}">
+                ★
+              </span>
+            </td>
+            <td>${file.fileName}</td>
+            <td style="text-align: center;">
+              <button class="action-btn play-btn" id="btn-${file.id}" onclick="togglePlay('${file.id}')">
+                Start
+              </button>
+            </td>
+            <td style="text-align: center;">
+              <button class="action-btn delete-btn" onclick="deleteFile('${file.id}')">
+                Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // 재생/일시정지 토글
+    function togglePlay(fileId) {
+      const audio = document.getElementById('audioPlayer');
+      const btn = document.getElementById('btn-' + fileId);
+      const file = allFiles.find(f => f.id === fileId);
+
+      if (!file) {
+        alert('파일을 찾을 수 없습니다.');
+        return;
+      }
+
+      if (currentPlayingId === fileId && !audio.paused) {
+        audio.pause();
+        btn.textContent = 'Start';
+        btn.classList.remove('pause-btn');
+        btn.classList.add('play-btn');
+      } else {
+        if (currentPlayingId !== fileId) {
+          // 이전 재생 버튼 초기화
+          if (currentPlayingId) {
+            const prevBtn = document.getElementById('btn-' + currentPlayingId);
+            if (prevBtn) {
+              prevBtn.textContent = 'Start';
+              prevBtn.classList.remove('pause-btn');
+              prevBtn.classList.add('play-btn');
+            }
+          }
+
+          audio.src = file.fileData;
+          currentPlayingId = fileId;
+        }
+
+        audio.play().then(() => {
+          btn.textContent = 'Pause';
+          btn.classList.remove('play-btn');
+          btn.classList.add('pause-btn');
+        }).catch(error => {
+          console.error('재생 오류:', error);
+          alert('파일을 재생할 수 없습니다.');
+        });
+      }
+
+      audio.onended = function() {
+        btn.textContent = 'Start';
+        btn.classList.remove('pause-btn');
+        btn.classList.add('play-btn');
+        currentPlayingId = null;
+      };
+    }
+
+    // 파일 삭제
+    function deleteFile(fileId) {
+      if (!confirm('이 파일을 삭제하시겠습니까?')) return;
+
+      allFiles = allFiles.filter(f => f.id !== fileId);
+      saveFiles();
+      
+      // 현재 재생 중인 파일이면 정지
+      if (currentPlayingId === fileId) {
+        const audio = document.getElementById('audioPlayer');
+        audio.pause();
+        currentPlayingId = null;
+      }
+
+      renderFiles();
+    }
+
+    // 즐겨찾기 토글
+    function toggleFavorite(fileId) {
+      const file = allFiles.find(f => f.id === fileId);
+      if (file) {
+        file.favorite = !file.favorite;
+        saveFiles();
+        renderFiles();
+      }
+    }
+  </script>
+</body>
+</html>
