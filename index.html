@@ -1,4 +1,39 @@
-<!DOCTYPE html>
+.file-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 25px;
+    }
+
+    @media (min-width: 768px) {
+      .file-table th.sortable {
+        padding-right: 30px;
+      }
+    }
+
+    .file-table th.sortable:hover {
+      background: #e9ecef;
+    }
+
+    .sort-icon {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #6c757d;
+    }
+
+    @media (min-width: 768px) {
+      .sort-icon {
+        right: 10px;
+        font-size: 12px;
+      }
+    }
+
+    .sort-icon.active {
+      color: #667eea;
+    }<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -15,7 +50,13 @@
       font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 20px;
+      padding: 10px;
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding: 20px;
+      }
     }
 
     .container {
@@ -46,8 +87,14 @@
     }
 
     .header-center h1 {
-      font-size: 24px;
+      font-size: 18px;
       font-weight: bold;
+    }
+
+    @media (min-width: 768px) {
+      .header-center h1 {
+        font-size: 24px;
+      }
     }
 
     .header-right {
@@ -79,7 +126,13 @@
     }
 
     .content {
-      padding: 30px;
+      padding: 15px;
+    }
+
+    @media (min-width: 768px) {
+      .content {
+        padding: 30px;
+      }
     }
 
     .upload-section {
@@ -130,6 +183,19 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      font-size: 13px;
+    }
+
+    @media (min-width: 768px) {
+      .file-table {
+        font-size: 14px;
+      }
+    }
+
+    /* 모바일에서 테이블 스크롤 가능하도록 */
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .file-table thead {
@@ -137,41 +203,33 @@
     }
 
     .file-table th {
-      padding: 15px;
+      padding: 10px 8px;
       text-align: left;
       font-weight: 600;
       color: #495057;
       border-bottom: 2px solid #dee2e6;
-    }
-
-    .file-table th.sortable {
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      padding-right: 30px;
-    }
-
-    .file-table th.sortable:hover {
-      background: #e9ecef;
-    }
-
-    .sort-icon {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
       font-size: 12px;
-      color: #6c757d;
     }
 
-    .sort-icon.active {
-      color: #667eea;
+    @media (min-width: 768px) {
+      .file-table th {
+        padding: 15px;
+        font-size: 14px;
+      }
     }
 
     .file-table td {
-      padding: 15px;
+      padding: 10px 8px;
       border-bottom: 1px solid #dee2e6;
       word-break: break-all;
+      font-size: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .file-table td {
+        padding: 15px;
+        font-size: 14px;
+      }
     }
 
     .file-table tr:hover {
@@ -181,14 +239,23 @@
     .action-btn {
       background: none;
       border: none;
-      padding: 8px 15px;
-      margin: 0 5px;
+      padding: 6px 10px;
+      margin: 0 3px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       transition: all 0.3s;
-      min-width: 80px;
+      min-width: 60px;
       white-space: nowrap;
+    }
+
+    @media (min-width: 768px) {
+      .action-btn {
+        padding: 8px 15px;
+        margin: 0 5px;
+        font-size: 14px;
+        min-width: 80px;
+      }
     }
 
     .play-btn {
@@ -248,18 +315,36 @@
 
     .filter-tabs {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+      .filter-tabs {
+        gap: 10px;
+      }
     }
 
     .filter-btn {
-      padding: 10px 20px;
+      padding: 8px 16px;
       border: 2px solid #667eea;
       background: white;
       color: #667eea;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s;
+      font-size: 13px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    @media (min-width: 768px) {
+      .filter-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        flex: initial;
+      }
     }
 
     .filter-btn.active {
@@ -354,7 +439,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-   // Your web app's Firebase configuration
+    // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
@@ -556,6 +641,7 @@ const firebaseConfig = {
       const sortIcon = sortOrder === 'asc' ? '▲' : '▼';
 
       let html = `
+        <div class="table-wrapper">
         <table class="file-table">
           <thead>
             <tr>
@@ -563,9 +649,8 @@ const firebaseConfig = {
                 Name
                 <span class="sort-icon active">${sortIcon}</span>
               </th>
-              <th width="100" style="text-align: center;">Duration</th>
-              <th width="200" style="text-align: center;">Start/Pause</th>
-              <th width="100" style="text-align: center;">Delete</th>
+              <th width="80" style="text-align: center;">Duration</th>
+              <th width="140" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -581,17 +666,15 @@ const firebaseConfig = {
               <button class="action-btn play-btn" id="btn-${file.id}" onclick="togglePlay('${file.id}')">
                 Start
               </button>
-            </td>
-            <td style="text-align: center;">
               <button class="action-btn delete-btn" onclick="deleteFile('${file.id}')">
-                Delete
+                Del
               </button>
             </td>
           </tr>
         `;
       });
 
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
       container.innerHTML = html;
     }
 
