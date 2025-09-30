@@ -214,7 +214,6 @@
     .file-table td {
       padding: 15px 20px;
       border-bottom: 1px solid #dee2e6;
-      word-break: break-all;
       font-size: 12px;
     }
 
@@ -222,6 +221,19 @@
       .file-table td {
         padding: 18px 25px;
         font-size: 14px;
+      }
+    }
+
+    .file-table td:first-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    @media (min-width: 768px) {
+      .file-table td:first-child {
+        max-width: 300px;
       }
     }
 
@@ -423,7 +435,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-   // Your web app's Firebase configuration
+  // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
