@@ -330,7 +330,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-   // Your web app's Firebase configuration
+  // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
@@ -340,6 +340,7 @@ const firebaseConfig = {
   messagingSenderId: "1051789566065",
   appId: "1:1051789566065:web:b2d137fdd58593b7957bd0"
 };
+
     // Firebase 초기화
     let database;
     let filesRef;
@@ -611,7 +612,10 @@ const firebaseConfig = {
 
     // 파일 삭제
     function deleteFile(fileId) {
-      if (!confirm('이 파일을 삭제하시겠습니까?')) return;
+      const file = allFiles.find(f => f.id === fileId);
+      const fileName = file ? file.fileName : '이 파일';
+      
+      if (!confirm(`"${fileName}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
 
       filesRef.child(fileId).remove().then(() => {
         if (currentPlayingId === fileId) {
