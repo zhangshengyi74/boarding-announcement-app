@@ -2,48 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-
-.file-table th.sortable {
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      padding-right: 25px;
-    }
-
-    @media (min-width: 768px) {
-      .file-table th.sortable {
-        padding-right: 30px;
-      }
-    }
-
-    .file-table th.sortable:hover {
-      background: #e9ecef;
-    }
-
-    .sort-icon {
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: #6c757d;
-    }
-
-    @media (min-width: 768px) {
-      .sort-icon {
-        right: 10px;
-        font-size: 12px;
-      }
-    }
-
-    .sort-icon.active {
-      color: #667eea;
-    }<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>탑승구 안내방송 APP</title>
+  <title>Gate Announcement</title>
   <style>
     * {
       margin: 0;
@@ -184,6 +144,11 @@
       display: none;
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .file-table {
       width: 100%;
       border-collapse: collapse;
@@ -195,12 +160,6 @@
       .file-table {
         font-size: 14px;
       }
-    }
-
-    /* 모바일에서 테이블 스크롤 가능하도록 */
-    .table-wrapper {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
     }
 
     .file-table thead {
@@ -221,6 +180,43 @@
         padding: 15px;
         font-size: 14px;
       }
+    }
+
+    .file-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 25px;
+    }
+
+    @media (min-width: 768px) {
+      .file-table th.sortable {
+        padding-right: 30px;
+      }
+    }
+
+    .file-table th.sortable:hover {
+      background: #e9ecef;
+    }
+
+    .sort-icon {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #6c757d;
+    }
+
+    @media (min-width: 768px) {
+      .sort-icon {
+        right: 10px;
+        font-size: 12px;
+      }
+    }
+
+    .sort-icon.active {
+      color: #667eea;
     }
 
     .file-table td {
@@ -288,16 +284,6 @@
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
-    }
-
-    .favorite-icon {
-      cursor: pointer;
-      font-size: 20px;
-      transition: all 0.3s;
-    }
-
-    .favorite-icon:hover {
-      transform: scale(1.2);
     }
 
     .loading {
@@ -445,7 +431,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-  // Your web app's Firebase configuration
+    // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
@@ -476,7 +462,7 @@ const firebaseConfig = {
     let allFiles = [];
     let currentFilter = 'Normal';
     let currentPlayingId = null;
-    let sortOrder = 'asc'; // 'asc' 또는 'desc'
+    let sortOrder = 'asc';
 
     // 초기 로드
     window.onload = function() {
@@ -515,15 +501,12 @@ const firebaseConfig = {
       const file = e.target.files[0];
       if (!file) return;
 
-      // 파일 크기 체크 (7MB)
       if (file.size > 7 * 1024 * 1024) {
         showStatus('파일 크기는 7MB 이하여야 합니다.', 'error');
         return;
       }
 
-      // 선택된 카테고리 가져오기
       const category = document.querySelector('input[name="category"]:checked').value;
-
       const statusEl = document.getElementById('uploadStatus');
       const selectBtn = document.getElementById('selectFileBtn');
       
@@ -534,7 +517,6 @@ const firebaseConfig = {
       const reader = new FileReader();
       reader.onload = function(event) {
         try {
-          // 오디오 duration 가져오기
           const audio = new Audio();
           audio.src = event.target.result;
           
@@ -549,7 +531,6 @@ const firebaseConfig = {
               uploadDate: new Date().toISOString()
             };
 
-            // Firebase에 저장
             filesRef.push(fileData).then(() => {
               statusEl.className = 'status-message status-success';
               statusEl.textContent = '업로드 완료!';
@@ -621,7 +602,6 @@ const firebaseConfig = {
         displayFiles = allFiles.filter(f => f.category === 'Abnormal');
       }
 
-      // 정렬 적용
       displayFiles.sort((a, b) => {
         const nameA = a.fileName.toLowerCase();
         const nameB = b.fileName.toLowerCase();
@@ -684,20 +664,17 @@ const firebaseConfig = {
       container.innerHTML = html;
     }
 
-    // 정렬 토글
-    function toggleSort() {
-      sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-      renderFiles();
-    }
-
-    // Duration 포맷팅 (초 -> MM:SS)
     function formatDuration(seconds) {
       const mins = Math.floor(seconds / 60);
       const secs = seconds % 60;
       return mins + ':' + (secs < 10 ? '0' : '') + secs;
     }
 
-    // 재생/일시정지 토글
+    function toggleSort() {
+      sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      renderFiles();
+    }
+
     function togglePlay(fileId) {
       const audio = document.getElementById('audioPlayer');
       const btn = document.getElementById('btn-' + fileId);
@@ -746,7 +723,6 @@ const firebaseConfig = {
       };
     }
 
-    // 파일 삭제
     function deleteFile(fileId) {
       const file = allFiles.find(f => f.id === fileId);
       const fileName = file ? file.fileName : 'this file';
@@ -764,8 +740,6 @@ const firebaseConfig = {
         alert('Delete failed: ' + error.message);
       });
     }
-
-    // 즐겨찾기 토글 - 삭제됨 (더 이상 사용하지 않음)
   </script>
 </body>
 </html>
