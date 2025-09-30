@@ -450,17 +450,41 @@ const firebaseConfig = {
     let database;
     let filesRef;
     let isFirebaseConnected = false;
+    let connectionTimeout;
+
+    // 연결 타임아웃 설정 (10초)
+    connectionTimeout = setTimeout(() => {
+      if (!isFirebaseConnected || allFiles.length === 0) {
+        document.getElementById('fileListContainer').innerHTML = 
+          '<div class="empty-state"><p>Connection timeout.<br>Please refresh the page.</p></div>';
+      }
+    }, 10000);
 
     try {
       firebase.initializeApp(firebaseConfig);
       database = firebase.database();
+      
+      // iOS Safari 호환성을 위한 설정
+      database.goOffline();
+      database.goOnline();
+      
       filesRef = database.ref('files');
       isFirebaseConnected = true;
       console.log('Firebase 연결 성공');
+      
+      // 연결 상태 확인
+      const connectedRef = database.ref('.info/connected');
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          console.log('Firebase 실시간 연결됨');
+          clearTimeout(connectionTimeout);
+        }
+      });
     } catch (error) {
+      clearTimeout(connectionTimeout);
       console.error('Firebase 초기화 실패:', error);
       document.getElementById('fileListContainer').innerHTML = 
-        '<div class="empty-state"><p>Firebase 설정이 필요합니다.</p></div>';
+        '<div class="empty-state"><p>Firebase configuration required.</p></div>';
     }
 
     let allFiles = [];
@@ -580,7 +604,17 @@ const firebaseConfig = {
 
     // Firebase에서 파일 로드
     function loadFiles() {
-      filesRef.on('value', (snapshot) => {
+      const loadTimeout = setTimeout(() => {
+        if (allFiles.length === 0) {
+          document.getElementById('fileListContainer').innerHTML = 
+            '<div class="empty-state"><p>Loading timeout.<br>Please check your connection and refresh.</p></div>';
+        }
+      }, 8000);
+
+      filesRef.once('value').then((snapshot) => {
+        clearTimeout(loadTimeout);
+        clearTimeout(connectionTimeout);
+        
         allFiles = [];
         snapshot.forEach((childSnapshot) => {
           const file = childSnapshot.val();
@@ -588,10 +622,23 @@ const firebaseConfig = {
           allFiles.push(file);
         });
         renderFiles();
-      }, (error) => {
+        
+        // 초기 로드 후 실시간 리스너 등록
+        filesRef.on('value', (snapshot) => {
+          allFiles = [];
+          snapshot.forEach((childSnapshot) => {
+            const file = childSnapshot.val();
+            file.id = childSnapshot.key;
+            allFiles.push(file);
+          });
+          renderFiles();
+        });
+      }).catch((error) => {
+        clearTimeout(loadTimeout);
+        clearTimeout(connectionTimeout);
         console.error('파일 로드 실패:', error);
         document.getElementById('fileListContainer').innerHTML = 
-          '<div class="empty-state"><p>파일을 불러올 수 없습니다.</p></div>';
+          '<div class="empty-state"><p>Failed to load files.<br>Please refresh the page.</p></div>';
       });
     }
 
