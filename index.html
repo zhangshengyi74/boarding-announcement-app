@@ -639,9 +639,9 @@ const firebaseConfig = {
         if (allFiles.length === 0) {
           console.log('파일 로드 타임아웃');
           document.getElementById('fileListContainer').innerHTML = 
-            '<div class="empty-state"><p>Loading timeout (8s).<br><button class="upload-btn" onclick="location.reload()">Retry</button></p></div>';
+            '<div class="empty-state"><p>Loading timeout (15s).<br><button class="upload-btn" onclick="location.reload()">Retry</button></p></div>';
         }
-      }, 8000);
+      }, 15000);
 
       // iOS용 간단한 로드 방식
       filesRef.once('value').then((snapshot) => {
