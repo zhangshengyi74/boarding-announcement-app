@@ -430,12 +430,18 @@
 
   <audio id="audioPlayer" style="display: none;"></audio>
 
-  <!-- Firebase SDK v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- Firebase SDK v9 (modular) - iOS 호환성 개선 -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
- // Your web app's Firebase configuration
+    // iOS Safari 감지
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    console.log('Device info:', { isIOS, isSafari, userAgent: navigator.userAgent });
+
+   // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
@@ -451,41 +457,65 @@ const firebaseConfig = {
     let filesRef;
     let isFirebaseConnected = false;
     let connectionTimeout;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
 
-    // 연결 타임아웃 설정 (10초)
+    function initializeFirebase() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        
+        database = firebase.database();
+        
+        // iOS Safari용 특별 설정
+        if (isIOS || isSafari) {
+          console.log('iOS/Safari 감지 - 특별 설정 적용');
+          // 캐시 비활성화
+          database.goOffline();
+          setTimeout(() => {
+            database.goOnline();
+          }, 100);
+        }
+        
+        filesRef = database.ref('files');
+        isFirebaseConnected = true;
+        console.log('Firebase 초기화 완료');
+        
+        return true;
+      } catch (error) {
+        console.error('Firebase 초기화 실패:', error);
+        return false;
+      }
+    }
+
+    // 연결 재시도 로직
+    function attemptConnection() {
+      console.log(`연결 시도 ${retryCount + 1}/${MAX_RETRIES}`);
+      
+      const success = initializeFirebase();
+      
+      if (success && isFirebaseConnected) {
+        clearTimeout(connectionTimeout);
+        loadFiles();
+      } else {
+        retryCount++;
+        if (retryCount < MAX_RETRIES) {
+          setTimeout(attemptConnection, 2000);
+        } else {
+          document.getElementById('fileListContainer').innerHTML = 
+            '<div class="empty-state"><p>Connection failed after ' + MAX_RETRIES + ' attempts.<br>Please check:<br>1. Internet connection<br>2. Firebase configuration<br>3. Refresh the page</p></div>';
+        }
+      }
+    }
+
+    // 타임아웃 설정
     connectionTimeout = setTimeout(() => {
       if (!isFirebaseConnected || allFiles.length === 0) {
         document.getElementById('fileListContainer').innerHTML = 
-          '<div class="empty-state"><p>Connection timeout.<br>Please refresh the page.</p></div>';
+          '<div class="empty-state"><p>Connection timeout (15s).<br><button class="upload-btn" onclick="location.reload()">Retry</button></p></div>';
       }
-    }, 10000);
-
-    try {
-      firebase.initializeApp(firebaseConfig);
-      database = firebase.database();
-      
-      // iOS Safari 호환성을 위한 설정
-      database.goOffline();
-      database.goOnline();
-      
-      filesRef = database.ref('files');
-      isFirebaseConnected = true;
-      console.log('Firebase 연결 성공');
-      
-      // 연결 상태 확인
-      const connectedRef = database.ref('.info/connected');
-      connectedRef.on('value', (snap) => {
-        if (snap.val() === true) {
-          console.log('Firebase 실시간 연결됨');
-          clearTimeout(connectionTimeout);
-        }
-      });
-    } catch (error) {
-      clearTimeout(connectionTimeout);
-      console.error('Firebase 초기화 실패:', error);
-      document.getElementById('fileListContainer').innerHTML = 
-        '<div class="empty-state"><p>Firebase configuration required.</p></div>';
-    }
+    }, 15000);
 
     let allFiles = [];
     let currentFilter = 'Normal';
@@ -494,9 +524,8 @@ const firebaseConfig = {
 
     // 초기 로드
     window.onload = function() {
-      if (isFirebaseConnected) {
-        loadFiles();
-      }
+      console.log('페이지 로드 완료');
+      attemptConnection();
     };
 
     // 업로드 토글
@@ -604,42 +633,76 @@ const firebaseConfig = {
 
     // Firebase에서 파일 로드
     function loadFiles() {
+      console.log('파일 로드 시작');
+      
       const loadTimeout = setTimeout(() => {
         if (allFiles.length === 0) {
+          console.log('파일 로드 타임아웃');
           document.getElementById('fileListContainer').innerHTML = 
-            '<div class="empty-state"><p>Loading timeout.<br>Please check your connection and refresh.</p></div>';
+            '<div class="empty-state"><p>Loading timeout (8s).<br><button class="upload-btn" onclick="location.reload()">Retry</button></p></div>';
         }
       }, 8000);
 
+      // iOS용 간단한 로드 방식
       filesRef.once('value').then((snapshot) => {
         clearTimeout(loadTimeout);
         clearTimeout(connectionTimeout);
         
+        console.log('데이터 수신 성공');
         allFiles = [];
+        
+        if (!snapshot.exists()) {
+          console.log('데이터 없음');
+          renderFiles();
+          return;
+        }
+        
         snapshot.forEach((childSnapshot) => {
           const file = childSnapshot.val();
           file.id = childSnapshot.key;
           allFiles.push(file);
         });
+        
+        console.log('파일 개수:', allFiles.length);
         renderFiles();
         
-        // 초기 로드 후 실시간 리스너 등록
-        filesRef.on('value', (snapshot) => {
-          allFiles = [];
-          snapshot.forEach((childSnapshot) => {
-            const file = childSnapshot.val();
-            file.id = childSnapshot.key;
-            allFiles.push(file);
-          });
-          renderFiles();
-        });
+        // 실시간 리스너 등록
+        filesRef.on('child_added', handleChildAdded);
+        filesRef.on('child_changed', handleChildChanged);
+        filesRef.on('child_removed', handleChildRemoved);
+        
       }).catch((error) => {
         clearTimeout(loadTimeout);
         clearTimeout(connectionTimeout);
         console.error('파일 로드 실패:', error);
         document.getElementById('fileListContainer').innerHTML = 
-          '<div class="empty-state"><p>Failed to load files.<br>Please refresh the page.</p></div>';
+          '<div class="empty-state"><p>Failed to load: ' + error.message + '<br><button class="upload-btn" onclick="location.reload()">Retry</button></p></div>';
       });
+    }
+
+    // 실시간 업데이트 핸들러
+    function handleChildAdded(snapshot) {
+      const file = snapshot.val();
+      file.id = snapshot.key;
+      if (!allFiles.find(f => f.id === file.id)) {
+        allFiles.push(file);
+        renderFiles();
+      }
+    }
+
+    function handleChildChanged(snapshot) {
+      const file = snapshot.val();
+      file.id = snapshot.key;
+      const index = allFiles.findIndex(f => f.id === file.id);
+      if (index !== -1) {
+        allFiles[index] = file;
+        renderFiles();
+      }
+    }
+
+    function handleChildRemoved(snapshot) {
+      allFiles = allFiles.filter(f => f.id !== snapshot.key);
+      renderFiles();
     }
 
     // 파일 목록 렌더링
