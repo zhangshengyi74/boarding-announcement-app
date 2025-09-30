@@ -240,19 +240,20 @@
       background: none;
       border: none;
       padding: 6px 10px;
-      margin: 0 3px;
+      margin: 2px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 12px;
       transition: all 0.3s;
       min-width: 60px;
       white-space: nowrap;
+      display: inline-block;
     }
 
     @media (min-width: 768px) {
       .action-btn {
         padding: 8px 15px;
-        margin: 0 5px;
+        margin: 3px;
         font-size: 14px;
         min-width: 80px;
       }
@@ -439,7 +440,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // Your web app's Firebase configuration
+  // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBQAfAx-K15PMqc-iACOwMINF2UN0MIG6Q",
   authDomain: "boarding-announcement.firebaseapp.com",
@@ -649,8 +650,8 @@ const firebaseConfig = {
                 Name
                 <span class="sort-icon active">${sortIcon}</span>
               </th>
-              <th width="80" style="text-align: center;">Duration</th>
-              <th width="140" style="text-align: center;">Action</th>
+              <th width="90" style="text-align: center;">Duration</th>
+              <th width="160" style="text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -661,8 +662,8 @@ const firebaseConfig = {
         html += `
           <tr>
             <td>${file.fileName}</td>
-            <td style="text-align: center;">${duration}</td>
-            <td style="text-align: center;">
+            <td style="text-align: center; padding: 10px;">${duration}</td>
+            <td style="text-align: center; white-space: nowrap;">
               <button class="action-btn play-btn" id="btn-${file.id}" onclick="togglePlay('${file.id}')">
                 Start
               </button>
